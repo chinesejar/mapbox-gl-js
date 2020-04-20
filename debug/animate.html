@@ -14,12 +14,32 @@
 <div id='map'></div>
 
 <script src='../dist/mapbox-gl-dev.js'></script>
-<script src='../debug/access_token_generated.js'></script>
 <script>
 
 var map = window.map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v11',
+    style: {
+        version: 8,
+        glyphs: 'http://radar-server.duogeetech.com/font/{range}.pbf?font={fontstack}',
+        sources: {
+            "raster-tiles": {
+                type: "raster",
+                tiles: ['http://radar-server.duogeetech.com/tile/google/satelite/{z}/{x}/{y}'],
+                tileSize: 512,
+                minzoom: 0,
+                maxzoom: 23
+            },
+        },
+        layers: [
+            {
+                id: "tiles",
+                type: "raster",
+                source: "raster-tiles",
+                minzoom: 0,
+                maxzoom: 23
+            }
+        ]
+    },
     center: [0, 0],
     zoom: 4
 });

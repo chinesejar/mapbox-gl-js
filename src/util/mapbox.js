@@ -67,38 +67,38 @@ export class RequestManager {
         return {url};
     }
 
-    normalizeStyleURL(url: string, accessToken?: string): string {
+    normalizeStyleURL(url: string): string {
         if (!isMapboxURL(url)) return url;
         const urlObject = parseUrl(url);
         urlObject.path = `/styles/v1${urlObject.path}`;
-        return this._makeAPIURL(urlObject, this._customAccessToken || accessToken);
+        return this._makeAPIURL(urlObject);
     }
 
-    normalizeGlyphsURL(url: string, accessToken?: string): string {
+    normalizeGlyphsURL(url: string): string {
         if (!isMapboxURL(url)) return url;
         const urlObject = parseUrl(url);
         urlObject.path = `/fonts/v1${urlObject.path}`;
-        return this._makeAPIURL(urlObject, this._customAccessToken || accessToken);
+        return this._makeAPIURL(urlObject);
     }
 
-    normalizeSourceURL(url: string, accessToken?: string): string {
+    normalizeSourceURL(url: string): string {
         if (!isMapboxURL(url)) return url;
         const urlObject = parseUrl(url);
         urlObject.path = `/v4/${urlObject.authority}.json`;
         // TileJSON requests need a secure flag appended to their URLs so
         // that the server knows to send SSL-ified resource references.
         urlObject.params.push('secure');
-        return this._makeAPIURL(urlObject, this._customAccessToken || accessToken);
+        return this._makeAPIURL(urlObject);
     }
 
-    normalizeSpriteURL(url: string, format: string, extension: string, accessToken?: string): string {
+    normalizeSpriteURL(url: string, format: string, extension: string): string {
         const urlObject = parseUrl(url);
         if (!isMapboxURL(url)) {
             urlObject.path += `${format}${extension}`;
             return formatUrl(urlObject);
         }
         urlObject.path = `/styles/v1${urlObject.path}/sprite${format}${extension}`;
-        return this._makeAPIURL(urlObject, this._customAccessToken || accessToken);
+        return this._makeAPIURL(urlObject);
     }
 
     normalizeTileURL(tileURL: string, tileSize?: ?number): string {
@@ -121,12 +121,7 @@ export class RequestManager {
         urlObject.path = urlObject.path.replace(tileURLAPIPrefixRe, '/');
         urlObject.path = `/v4${urlObject.path}`;
 
-        const accessToken = this._customAccessToken || getAccessToken(urlObject.params) || config.ACCESS_TOKEN;
-        if (config.REQUIRE_ACCESS_TOKEN && accessToken && this._skuToken) {
-            urlObject.params.push(`sku=${this._skuToken}`);
-        }
-
-        return this._makeAPIURL(urlObject, accessToken);
+        return this._makeAPIURL(urlObject);
     }
 
     canonicalizeTileURL(url: string, removeAccessToken: boolean) {
@@ -167,8 +162,7 @@ export class RequestManager {
         return canonical;
     }
 
-    _makeAPIURL(urlObject: UrlObject, accessToken: string | null | void): string {
-        const help = 'See https://www.mapbox.com/api-documentation/#access-tokens-and-token-scopes';
+    _makeAPIURL(urlObject: UrlObject): string {
         const apiUrlObject = parseUrl(config.API_URL);
         urlObject.protocol = apiUrlObject.protocol;
         urlObject.authority = apiUrlObject.authority;
@@ -177,16 +171,6 @@ export class RequestManager {
             urlObject.path = `${apiUrlObject.path}${urlObject.path}`;
         }
 
-        if (!config.REQUIRE_ACCESS_TOKEN) return formatUrl(urlObject);
-
-        accessToken = accessToken || config.ACCESS_TOKEN;
-        if (!accessToken)
-            throw new Error(`An API access token is required to use Mapbox GL. ${help}`);
-        if (accessToken[0] === 's')
-            throw new Error(`Use a public access token (pk.*) with Mapbox GL, not a secret access token (sk.*). ${help}`);
-
-        urlObject.params = urlObject.params.filter((d) => d.indexOf('access_token') === -1);
-        urlObject.params.push(`access_token=${accessToken}`);
         return formatUrl(urlObject);
     }
 }
